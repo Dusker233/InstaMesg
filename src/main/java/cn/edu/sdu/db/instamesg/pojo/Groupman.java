@@ -10,12 +10,12 @@ public class Groupman {
 
     @MapsId("groupId")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "groupId", nullable = false)
+    @JoinColumn(name = "group_id", nullable = false)
     private Group group;
 
     @MapsId("managerId")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "managerId", nullable = false)
+    @JoinColumn(name = "manager_id", nullable = false)
     private User manager;
 
     public GroupmanId getId() {

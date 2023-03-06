@@ -1,29 +1,27 @@
 package cn.edu.sdu.db.instamesg.pojo;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 
 @Entity
-public class IpLocation {
+@Table(name = "bannedusers")
+public class Banneduser {
     @EmbeddedId
-    private IpLocationId id;
+    private BanneduserId id;
 
     @MapsId("userId")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Size(max = 64)
-    @NotNull
-    @Column(name = "ip", nullable = false, length = 64)
-    private String ip;
+    @Lob
+    @Column(name = "ban_reason")
+    private String banReason;
 
-    public IpLocationId getId() {
+    public BanneduserId getId() {
         return id;
     }
 
-    public void setId(IpLocationId id) {
+    public void setId(BanneduserId id) {
         this.id = id;
     }
 
@@ -35,12 +33,12 @@ public class IpLocation {
         this.user = user;
     }
 
-    public String getIp() {
-        return ip;
+    public String getBanReason() {
+        return banReason;
     }
 
-    public void setIp(String ip) {
-        this.ip = ip;
+    public void setBanReason(String banReason) {
+        this.banReason = banReason;
     }
 
 }

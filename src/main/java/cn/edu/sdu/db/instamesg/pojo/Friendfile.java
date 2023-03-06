@@ -10,17 +10,17 @@ public class Friendfile {
 
     @MapsId("senderId")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "senderId", nullable = false)
+    @JoinColumn(name = "sender_id", nullable = false)
     private User sender;
 
     @MapsId("receiverId")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "receiverId", nullable = false)
+    @JoinColumn(name = "receiver_id", nullable = false)
     private User receiver;
 
     @MapsId("fileId")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "fileId", nullable = false)
+    @JoinColumn(name = "file_id", nullable = false)
     private File file;
 
     public FriendfileId getId() {

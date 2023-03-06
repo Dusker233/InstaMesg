@@ -10,12 +10,12 @@ public class Groupfile {
 
     @MapsId("groupId")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "groupId", nullable = false)
+    @JoinColumn(name = "group_id", nullable = false)
     private Group group;
 
     @MapsId("fileId")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "fileId", nullable = false)
+    @JoinColumn(name = "file_id", nullable = false)
     private File file;
 
     public GroupfileId getId() {

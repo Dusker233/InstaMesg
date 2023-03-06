@@ -1,19 +1,24 @@
 package cn.edu.sdu.db.instamesg.pojo;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "groups")
 public class Group {
     @Id
-    @Column(name = "groupId", nullable = false)
+    @Column(name = "group_id", nullable = false)
     private Integer id;
 
-    @Column(name = "groupName", nullable = false, length = 64)
+    @Size(max = 64)
+    @NotNull
+    @Column(name = "group_name", nullable = false, length = 64)
     private String groupName;
 
+    @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "ownerId", nullable = false)
+    @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
 
     public Integer getId() {

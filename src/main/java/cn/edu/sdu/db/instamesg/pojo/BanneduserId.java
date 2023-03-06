@@ -10,15 +10,15 @@ import java.time.Instant;
 import java.util.Objects;
 
 @Embeddable
-public class IpLocationId implements Serializable {
-    private static final long serialVersionUID = -4143741201902263508L;
+public class BanneduserId implements Serializable {
+    private static final long serialVersionUID = 3628269417097471929L;
     @NotNull
     @Column(name = "user_id", nullable = false)
     private Integer userId;
 
     @NotNull
-    @Column(name = "login_time", nullable = false)
-    private Instant loginTime;
+    @Column(name = "ban_time", nullable = false)
+    private Instant banTime;
 
     public Integer getUserId() {
         return userId;
@@ -28,26 +28,26 @@ public class IpLocationId implements Serializable {
         this.userId = userId;
     }
 
-    public Instant getLoginTime() {
-        return loginTime;
+    public Instant getBanTime() {
+        return banTime;
     }
 
-    public void setLoginTime(Instant loginTime) {
-        this.loginTime = loginTime;
+    public void setBanTime(Instant banTime) {
+        this.banTime = banTime;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
-        IpLocationId entity = (IpLocationId) o;
-        return Objects.equals(this.loginTime, entity.loginTime) &&
+        BanneduserId entity = (BanneduserId) o;
+        return Objects.equals(this.banTime, entity.banTime) &&
                 Objects.equals(this.userId, entity.userId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(loginTime, userId);
+        return Objects.hash(banTime, userId);
     }
 
 }

@@ -8,15 +8,15 @@ public class Friend {
     @EmbeddedId
     private FriendId id;
 
-    @MapsId("userAId")
+    @MapsId("useraId")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "userAId", nullable = false)
-    private User userAId;
+    @JoinColumn(name = "usera_id", nullable = false)
+    private User usera;
 
-    @MapsId("userBId")
+    @MapsId("userbId")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "userBId", nullable = false)
-    private User userBId;
+    @JoinColumn(name = "userb_id", nullable = false)
+    private User userb;
 
     public FriendId getId() {
         return id;
@@ -26,20 +26,20 @@ public class Friend {
         this.id = id;
     }
 
-    public User getUserAId() {
-        return userAId;
+    public User getUsera() {
+        return usera;
     }
 
-    public void setUserAId(User userAId) {
-        this.userAId = userAId;
+    public void setUsera(User usera) {
+        this.usera = usera;
     }
 
-    public User getUserBId() {
-        return userBId;
+    public User getUserb() {
+        return userb;
     }
 
-    public void setUserBId(User userBId) {
-        this.userBId = userBId;
+    public void setUserb(User userb) {
+        this.userb = userb;
     }
 
 }

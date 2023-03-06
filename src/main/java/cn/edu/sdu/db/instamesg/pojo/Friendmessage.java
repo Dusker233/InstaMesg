@@ -1,25 +1,28 @@
 package cn.edu.sdu.db.instamesg.pojo;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "friendmessages")
 public class Friendmessage {
     @Id
-    @Column(name = "messageId", nullable = false)
+    @Column(name = "message_id", nullable = false)
     private Integer id;
 
     @MapsId
     @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "messageId", nullable = false)
+    @JoinColumn(name = "message_id", nullable = false)
     private Message messages;
 
+    @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "senderId", nullable = false)
+    @JoinColumn(name = "sender_id", nullable = false)
     private User sender;
 
+    @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "receiverId", nullable = false)
+    @JoinColumn(name = "receiver_id", nullable = false)
     private User receiver;
 
     public Integer getId() {

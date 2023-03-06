@@ -2,7 +2,7 @@ package cn.edu.sdu.db.instamesg.pojo;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import jakarta.persistence.Entity;
+import jakarta.validation.constraints.NotNull;
 import org.hibernate.Hibernate;
 
 import java.io.Serializable;
@@ -11,10 +11,12 @@ import java.util.Objects;
 @Embeddable
 public class GroupmanId implements Serializable {
     private static final long serialVersionUID = 6579965529255839203L;
-    @Column(name = "groupId", nullable = false)
+    @NotNull
+    @Column(name = "group_id", nullable = false)
     private Integer groupId;
 
-    @Column(name = "managerId", nullable = false)
+    @NotNull
+    @Column(name = "manager_id", nullable = false)
     private Integer managerId;
 
     public Integer getGroupId() {

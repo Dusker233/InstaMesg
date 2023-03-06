@@ -2,7 +2,7 @@ package cn.edu.sdu.db.instamesg.pojo;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import jakarta.persistence.Entity;
+import jakarta.validation.constraints.NotNull;
 import org.hibernate.Hibernate;
 
 import java.io.Serializable;
@@ -11,13 +11,16 @@ import java.util.Objects;
 @Embeddable
 public class FriendfileId implements Serializable {
     private static final long serialVersionUID = 1676191511690370719L;
-    @Column(name = "senderId", nullable = false)
+    @NotNull
+    @Column(name = "sender_id", nullable = false)
     private Integer senderId;
 
-    @Column(name = "receiverId", nullable = false)
+    @NotNull
+    @Column(name = "receiver_id", nullable = false)
     private Integer receiverId;
 
-    @Column(name = "fileId", nullable = false)
+    @NotNull
+    @Column(name = "file_id", nullable = false)
     private Integer fileId;
 
     public Integer getSenderId() {

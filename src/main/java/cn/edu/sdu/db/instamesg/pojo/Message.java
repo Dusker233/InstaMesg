@@ -1,6 +1,7 @@
 package cn.edu.sdu.db.instamesg.pojo;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 
 import java.time.Instant;
 
@@ -8,9 +9,10 @@ import java.time.Instant;
 @Table(name = "messages")
 public class Message {
     @Id
-    @Column(name = "messageId", nullable = false)
+    @Column(name = "message_id", nullable = false)
     private Integer id;
 
+    @NotNull
     @Lob
     @Column(name = "type", nullable = false)
     private String type;
@@ -22,7 +24,8 @@ public class Message {
     @Column(name = "picture")
     private byte[] picture;
 
-    @Column(name = "sendTime", nullable = false)
+    @NotNull
+    @Column(name = "send_time", nullable = false)
     private Instant sendTime;
 
     public Integer getId() {

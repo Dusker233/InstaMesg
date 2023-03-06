@@ -1,6 +1,8 @@
 package cn.edu.sdu.db.instamesg.pojo;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.time.Instant;
 
@@ -8,20 +10,25 @@ import java.time.Instant;
 @Table(name = "files")
 public class File {
     @Id
-    @Column(name = "fileId", nullable = false)
+    @Column(name = "file_id", nullable = false)
     private Integer id;
 
-    @Column(name = "fileName", nullable = false, length = 64)
+    @Size(max = 64)
+    @NotNull
+    @Column(name = "file_name", nullable = false, length = 64)
     private String fileName;
 
+    @NotNull
     @Column(name = "file", nullable = false)
     private byte[] file;
 
-    @Column(name = "uploadTime", nullable = false)
+    @NotNull
+    @Column(name = "upload_time", nullable = false)
     private Instant uploadTime;
 
+    @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "uploaderId", nullable = false)
+    @JoinColumn(name = "uploader_id", nullable = false)
     private User uploader;
 
     public Integer getId() {

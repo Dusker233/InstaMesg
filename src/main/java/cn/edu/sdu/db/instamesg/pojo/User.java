@@ -1,33 +1,51 @@
 package cn.edu.sdu.db.instamesg.pojo;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import org.springframework.util.DigestUtils;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 
 @Entity
 @Table(name = "user")
 public class User {
+    private static final String salt = "t)=3&TBc?(oL+:W:";
     @Id
-    @Column(name = "userId", nullable = false)
+    @Column(name = "user_id", nullable = false)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Size(max = 20)
+    @NotNull
     @Column(name = "username", nullable = false, length = 20)
     private String username;
 
+    @Size(max = 64)
+    @NotNull
     @Column(name = "password", nullable = false, length = 64)
     private String password;
 
+    @Size(max = 64)
+    @NotNull
     @Column(name = "email", nullable = false, length = 64)
+    @Email(regexp = "[a-zA-Z0-9_\\-]+@[a-zA-Z0-9_\\-]+(\\.[a-zA-Z0-9_\\-]+)+")
     private String email;
 
-    @Column(name = "registerTime", nullable = false)
+    @NotNull
+    @Column(name = "register_time", nullable = false)
     private Instant registerTime;
 
+    @NotNull
     @Column(name = "portrait", nullable = false)
     private byte[] portrait;
+
+    @NotNull
+    @Lob
+    @Column(name = "type", nullable = false)
+    private String type;
 
     public Integer getId() {
         return id;
@@ -50,7 +68,7 @@ public class User {
     }
 
     public void setPassword(String password) {
-        this.password = password;
+        this.password = User.getHashedPassword(password);
     }
 
     public String getEmail() {
@@ -77,4 +95,15 @@ public class User {
         this.portrait = portrait;
     }
 
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public static String getHashedPassword(String raw) {
+        return DigestUtils.md5DigestAsHex((salt + raw + salt).getBytes(StandardCharsets.UTF_8));
+    }
 }
