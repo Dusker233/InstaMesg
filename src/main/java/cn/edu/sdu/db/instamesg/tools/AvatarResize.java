@@ -22,7 +22,7 @@ public class AvatarResize {
      * @throws IOException if the default avatar is not found
      * @since 1.0
      */
-    public MultipartFile resize(MultipartFile avatar) throws IOException {
+    public synchronized MultipartFile resize(MultipartFile avatar) throws IOException {
         byte[] bytes = avatar.getBytes();
         InputStream in = new ByteArrayInputStream(bytes);
         BufferedImage image = ImageIO.read(in);

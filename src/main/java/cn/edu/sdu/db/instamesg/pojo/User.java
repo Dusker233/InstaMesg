@@ -28,6 +28,11 @@ public class User {
     @Column(name = "password", nullable = false, length = 64)
     private String password;
 
+    @Size(max = 256)
+    @NotNull
+    @Column(name = "secret", nullable = false, length = 256)
+    private String secret;
+
     @Size(max = 64)
     @NotNull
     @Column(name = "email", nullable = false, length = 64)
@@ -105,5 +110,13 @@ public class User {
 
     public static String getHashedPassword(String raw) {
         return DigestUtils.md5DigestAsHex((salt + raw + salt).getBytes(StandardCharsets.UTF_8));
+    }
+
+    public String getSecret() {
+        return secret;
+    }
+
+    public void setSecret(String secret) {
+        this.secret = secret;
     }
 }

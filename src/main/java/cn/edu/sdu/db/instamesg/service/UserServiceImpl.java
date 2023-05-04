@@ -8,13 +8,17 @@ package cn.edu.sdu.db.instamesg.service;
 import cn.edu.sdu.db.instamesg.dao.UserRepository;
 import cn.edu.sdu.db.instamesg.pojo.User;
 import cn.edu.sdu.db.instamesg.tools.AvatarResize;
+import com.amdelamar.jotp.OTP;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
+import java.time.ZonedDateTime;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -29,7 +33,7 @@ public class UserServiceImpl implements UserService {
      * @since 1.0
      */
     @Override
-    public User getUser(String username, String password) {
+    public synchronized User getUser(String username, String password) {
         return userRepository.findByUsernameAndPassword(username, User.getHashedPassword(password));
     }
 
@@ -40,13 +44,13 @@ public class UserServiceImpl implements UserService {
      * @param email email passed by the client
      * @param avatar avatar passed by the client, it can't be null
      * @return {@code 0} if the operation is successful, {@code 1} if the username already exists, {@code 2} if SQL error,
-     *          {@code 3} if the password is shorter than 6 or not exists number and letter at the same time
+     *          {@code 3} if the password is shorter than 6 or longer than 24 or not exists number and letter at the same time
      * @since 1.0
      */
     @Override
-    public Integer createUser(String username, String password, String email, @NotNull MultipartFile avatar) {
+    public synchronized Integer createUser(String username, String password, String email, @NotNull MultipartFile avatar) {
         try {
-            if(password.length() < 6 || !password.matches(".*[0-9].*") || !password.matches(".*[a-zA-Z].*"))
+            if(password.length() < 6 || !password.matches(".*[0-9].*") || !password.matches(".*[a-zA-Z].*") || password.length() > 24)
                 return 3;
             AvatarResize avatarResize = new AvatarResize();
             MultipartFile Avatar = avatarResize.resize(avatar);
@@ -57,7 +61,7 @@ public class UserServiceImpl implements UserService {
                     userRepository.updateType("normal", prevUser.getId());
                     userRepository.updatePassword(User.getHashedPassword(password), prevUser.getId());
                     userRepository.updateEmail(email, prevUser.getId());
-                    userRepository.updateRegisterTime(Instant.now(), prevUser.getId());
+                    userRepository.updateRegisterTime(Instant.now(Clock.offset(Clock.systemUTC(), Duration.ofHours(8))), prevUser.getId());
                     userRepository.updatePortrait(avatar.getBytes(), prevUser.getId());
                     return 0;
                 }
@@ -68,8 +72,9 @@ public class UserServiceImpl implements UserService {
             User user = new User();
             user.setUsername(username);
             user.setPassword(password);
+            user.setSecret(OTP.randomBase32(64));
             user.setEmail(email);
-            user.setRegisterTime(Instant.now());
+            user.setRegisterTime(Instant.now(Clock.offset(Clock.systemUTC(), Duration.ofHours(8))));
             user.setPortrait(Avatar.getBytes());
             user.setType("normal");
             userRepository.save(user);

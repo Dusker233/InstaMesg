@@ -13,16 +13,17 @@ import java.time.Instant;
 public interface UserRepository extends JpaRepository<User, Integer> {
     User findByUsernameAndPassword(String username, String password);
     User findByUsername(String username);
+    User findByEmail(String email);
 
     @Transactional
     @Modifying
     @Query("update User u set u.type = ?1 where u.id = ?2")
-    int updateType(String type, Integer id);
+    void updateType(String type, Integer id);
 
     @Transactional
     @Modifying
     @Query("update User u set u.password = ?1 where u.id = ?2")
-    int updatePassword(String hashedPassword, Integer id);
+    void updatePassword(String hashedPassword, Integer id);
 
     @Transactional
     @Modifying

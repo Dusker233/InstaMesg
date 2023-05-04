@@ -1,12 +1,28 @@
 package cn.edu.sdu.db.instamesg.api;
 
 public class DataResponse extends ApiResponse {
-    protected Object data;
+    private Object data;
 
     public DataResponse(Boolean status, String message, Object data) {
         this.status = status;
         this.message = message;
         this.data = data;
+    }
+
+    public Boolean getStatus() {
+        return status;
+    }
+
+    public void setStatus(Boolean status) {
+        this.status = status;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 
     public Object getData() {
