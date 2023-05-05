@@ -1,6 +1,7 @@
 package cn.edu.sdu.db.instamesg.pojo;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "bannedusers")
@@ -16,6 +17,11 @@ public class Banneduser {
     @Lob
     @Column(name = "ban_reason")
     private String banReason;
+
+    @MapsId("executor")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "executor", nullable = false)
+    private User executor;
 
     public BanneduserId getId() {
         return id;
@@ -41,4 +47,11 @@ public class Banneduser {
         this.banReason = banReason;
     }
 
+    public User getExecutor() {
+        return executor;
+    }
+
+    public void setExecutor(User executor) {
+        this.executor = executor;
+    }
 }

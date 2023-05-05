@@ -17,8 +17,11 @@ import cn.edu.sdu.db.instamesg.pojo.User;
 import cn.edu.sdu.db.instamesg.service.UserService;
 import com.amdelamar.jotp.OTP;
 import com.amdelamar.jotp.type.Type;
+import jakarta.mail.internet.MimeMessage;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,9 +34,10 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import static cn.edu.sdu.db.instamesg.tools.getCilentIp.getIP;
 
 //@Slf4j0
 @RestController
@@ -50,6 +54,13 @@ public class UserController {
 
     @Autowired
     private CORSFilter corsFilter;
+
+    @Autowired
+    private JavaMailSender mailSender;
+
+    private Map<String, String> captchaMap = new HashMap<>();
+
+    private static final String mailUserName = "instamesg@163.com";
 
     /**
      * Using {@code post} method to register a new user
@@ -114,8 +125,9 @@ public class UserController {
             return new SimpleResponse(false, "redirect:/user/register");
         } else {
             int userId = (int) session.getAttribute("user");
-            User user = userRepository.findById(userId).get();
-            String otpUrl = OTP.getURL(user.getSecret(), 6, Type.TOTP, "spring-boot-2FA", user.getUsername());
+            User user = userRepository.findById(userId).orElse(null);
+            assert user != null;
+            String otpUrl = OTP.getURL(user.getSecret(), 6, Type.TOTP, "InstaMesg-2FA", user.getUsername());
             String twoFaQrUrl = String.format(
                     "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=%s",
                     URLEncoder.encode(otpUrl, StandardCharsets.UTF_8));
@@ -140,19 +152,24 @@ public class UserController {
         if(session.getAttribute("user") != null) {
             return new SimpleResponse(false, "You've already logged in");
         }
-        if(username.contains("@"))
+        if(username.matches("^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\\.[a-zA-Z0-9_-]+)+$"))
             username = userRepository.findByEmail(username).getUsername();
 //        System.out.println(username + " " + password + " " + User.getHashedPassword(password));
         User user = userService.getUser(username, password);
         if(user != null) {
-            if(user.getType().equals("deleted"))
-                return new SimpleResponse(false, "This user has been deleted");
+            if(user.getType().equals("deleted") || user.getType().equals("banned"))
+                return new SimpleResponse(false, "This user has been deleted or banned");
             String serverGeneratedCode = OTP.create(user.getSecret(), OTP.timeInHex(), 6, Type.TOTP);
 //            System.out.println(serverGeneratedCode);
             if(!serverGeneratedCode.equals(authCode))
                 return new SimpleResponse(false, "Wrong 2-FA code");
             session.setAttribute("user", user.getId());
-            return new SimpleResponse(true, "");
+            if(userService.addIP(user.getId(), getIP()))
+                return new SimpleResponse(true, "");
+            else {
+                session.removeAttribute("user");
+                return new SimpleResponse(false, "Can't get your IP address");
+            }
         } else
             return new SimpleResponse(false, "Wrong username or password");
     }
@@ -184,15 +201,14 @@ public class UserController {
        int userId = (int)session.getAttribute("user");
 //        System.out.println(userId);
         List<Friend> FriendRelations = friendRepository.findFriendsByUserid(userId);
-        if(FriendRelations.size() == 0)
-            return new DataResponse(false, "This user doesn't have friends", null);
         List<User> users = new ArrayList<>();
+        // one-way friend relation
         for(Friend friend: FriendRelations) {
             if(friend.getUsera().getId() == userId)
                 users.add(friend.getUserb());
-            else
-                users.add(friend.getUsera());
         }
+        if(users.size() == 0)
+            return new DataResponse(false, "This user doesn't have friends", null);
         List<UserInfo> results = users.stream().map((u)-> new UserInfo(u.getId(), u.getUsername(),
                 u.getEmail(), u.getType(), u.getRegisterTime())).collect(Collectors.toList());
         return new DataResponse(true, "", results);
@@ -209,10 +225,133 @@ public class UserController {
      */
     @PostMapping("/modify")
     public synchronized ApiResponse modify(HttpSession session, @RequestParam String username, @RequestParam(required = false) String password,
-                          @RequestParam(required = false) String type, @RequestParam(required = false) MultipartFile avatar) {
+                          @RequestParam(required = false) String type, @RequestParam(required = false) MultipartFile avatar) throws IOException {
     if(session.getAttribute("user") == null)
         return new SimpleResponse(false, "not logged in");
     int userId = (int)session.getAttribute("user");
-    return null;
+    User user = userRepository.findByUsername(username);
+    User admin = userRepository.findById(userId).orElse(null);
+    if(user == null)
+        return new SimpleResponse(false, "This user doesn't exist");
+    // admin can modify other's information, including banned and deleted user
+    if(!username.equals(user.getUsername())) {
+        if(!admin.getType().equals("admin"))
+            return new SimpleResponse(false, "You don't have the permission to modify other's information");
+        else {
+            if(password != null)
+                userRepository.updatePassword(User.getHashedPassword(password), user.getId());
+            if(type != null && (type.equals("admin") || type.equals("normal") || type.equals("deleted")))
+                userRepository.updateType(type, user.getId());
+            else if(type != null)
+                return new SimpleResponse(false, "Wrong type");
+            if(avatar != null) {
+                userRepository.updatePortrait(avatar.getBytes(), user.getId());
+            }
+        }
+    }
+    else {
+        if(password != null)
+            userRepository.updatePassword(User.getHashedPassword(password), user.getId());
+        if(type != null && !user.getType().equals("admin"))
+            return new SimpleResponse(false, "You don't have the permission to modify your type");
+        else if(user.getType().equals("admin")) {
+            if(type != null && (type.equals("admin") || type.equals("normal") || type.equals("deleted")))
+                userRepository.updateType(type, user.getId());
+            else if(type != null)
+                return new SimpleResponse(false, "Wrong type");
+        }
+        if(avatar != null) {
+            userRepository.updatePortrait(avatar.getBytes(), user.getId());
+        }
+    }
+    return new SimpleResponse(true, "");
+    }
+
+    /**
+     * use {@code get} method to get a random code for reset password and 2FA
+     * @param email email passed by the client
+     * @return {@code ApiResponse} shows whether the operation is successful or not
+     */
+    @GetMapping("/getReset")
+    public synchronized ApiResponse getReset(@RequestParam String email) {
+        if(!email.matches("^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\\.[a-zA-Z0-9_-]+)+$"))
+            return new SimpleResponse(false, "Wrong email format");
+        User user = userRepository.findByEmail(email);
+        if(user == null)
+            return new SimpleResponse(false, "This email doesn't exist");
+        String verifyCode = String.valueOf(new Random().nextInt(899999) + 100000);
+        if(!captchaMap.containsKey(email))
+            captchaMap.put(email, verifyCode);
+        else
+            captchaMap.replace(email, verifyCode);
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("<html><head><title></title></head><body>");
+        stringBuilder.append("您好：<br/>");
+        stringBuilder.append("您的验证码是：").append(verifyCode).append("<br/>");
+        stringBuilder.append("您可以复制此验证码并返回至InstaMesg，以验证您的邮箱。<br/>");
+        stringBuilder.append("此验证码只能使用一次，在5分钟内有效。验证成功则自动失效。<br/>");
+        stringBuilder.append("如果您没有进行上述操作，请忽略此邮件。");
+        MimeMessage message = mailSender.createMimeMessage();
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            helper.setFrom(mailUserName);
+            helper.setTo(email);
+            helper.setSubject("邮箱验证");
+            helper.setText(stringBuilder.toString(), true);
+            mailSender.send(message);
+            return new SimpleResponse(true, verifyCode);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new SimpleResponse(false, "sent failed");
+        }
+    }
+
+    /**
+     * use {@code post} method to reset password
+     * @param email email passed by the client
+     * @param password password passed by the client
+     * @param captcha captcha passed by the client
+     * @return {@code ApiResponse} shows whether the operation is successful or not
+     */
+    @PostMapping("/reset")
+    public synchronized ApiResponse reset(@RequestParam String email, @RequestParam String password,
+                                          @RequestParam String captcha) {
+        if(!email.matches("^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\\.[a-zA-Z0-9_-]+)+$"))
+            return new SimpleResponse(false, "Wrong email format");
+        User user = userRepository.findByEmail(email);
+        if(user == null)
+            return new SimpleResponse(false, "This email doesn't exist");
+        if(!captchaMap.containsKey(email))
+            return new SimpleResponse(false, "Please get captcha first");
+        if(!captchaMap.get(email).equals(captcha))
+            return new SimpleResponse(false, "Wrong captcha");
+        userRepository.updatePassword(User.getHashedPassword(password), user.getId());
+        return new SimpleResponse(true, "");
+    }
+
+    @PostMapping("/ban")
+    public synchronized ApiResponse ban(HttpSession session, @RequestParam String username, @RequestParam(required = false) String reason) {
+        if(session.getAttribute("user") == null)
+            return new SimpleResponse(false, "not logged in");
+        int userId = (int)session.getAttribute("user");
+        User admin = userRepository.findById(userId).orElse(null);
+        assert admin != null;
+        if(!admin.getType().equals("admin"))
+            return new SimpleResponse(false, "You don't have the permission to ban user");
+        else if(userService.banUser(admin, username, reason))
+            return new SimpleResponse(true, "");
+        else
+            return new SimpleResponse(false, "Internal error");
+    }
+
+    @GetMapping("/info")
+    public synchronized DataResponse info(HttpSession session) {
+        if(session.getAttribute("user") == null)
+            return new DataResponse(false, "not logged in", null);
+        int userId = (int)session.getAttribute("user");
+        User user = userRepository.findById(userId).orElse(null);
+        assert user != null;
+        UserInfo userinfo = new UserInfo(user.getId(), user.getUsername(), user.getEmail(), user.getType(), user.getRegisterTime());
+        return new DataResponse(true, "", userinfo);
     }
 }

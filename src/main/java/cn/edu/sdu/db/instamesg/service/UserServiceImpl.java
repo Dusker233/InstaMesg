@@ -5,8 +5,10 @@
  */
 package cn.edu.sdu.db.instamesg.service;
 
+import cn.edu.sdu.db.instamesg.dao.BanneduserRepository;
+import cn.edu.sdu.db.instamesg.dao.IpLocationRepository;
 import cn.edu.sdu.db.instamesg.dao.UserRepository;
-import cn.edu.sdu.db.instamesg.pojo.User;
+import cn.edu.sdu.db.instamesg.pojo.*;
 import cn.edu.sdu.db.instamesg.tools.AvatarResize;
 import com.amdelamar.jotp.OTP;
 import jakarta.validation.constraints.NotNull;
@@ -24,6 +26,12 @@ import java.time.ZonedDateTime;
 public class UserServiceImpl implements UserService {
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private IpLocationRepository ipLocationRepository;
+
+    @Autowired
+    private BanneduserRepository banneduserRepository;
 
     /**
      * Get the user by username and password
@@ -82,6 +90,42 @@ public class UserServiceImpl implements UserService {
         } catch (Exception e) {
             e.printStackTrace();
             return 2;
+        }
+    }
+
+    @Override
+    public synchronized Boolean addIP(Integer id, String ip) {
+        if(ip.equals("Can't get IP"))
+            return false;
+        IpLocation ipLocation = new IpLocation();
+        IpLocationId ipLocationId = new IpLocationId();
+        ipLocationId.setUserId(id);
+        ipLocationId.setLoginTime(Instant.now(Clock.offset(Clock.systemUTC(), Duration.ofHours(8))));
+        ipLocation.setId(ipLocationId);
+        ipLocation.setIp(ip);
+        ipLocationRepository.save(ipLocation);
+        return true;
+    }
+
+    @Override
+    public synchronized Boolean banUser(User admin, String username, String reason) {
+        try {
+            Banneduser banneduser = new Banneduser();
+            BanneduserId banneduserId = new BanneduserId();
+            banneduserId.setUserId(userRepository.findByUsername(username).getId());
+            banneduserId.setBanTime(Instant.now(Clock.offset(Clock.systemUTC(), Duration.ofHours(8))));
+            banneduser.setId(banneduserId);
+            banneduser.setExecutor(admin);
+            if(reason != null)
+                banneduser.setBanReason(reason);
+            else
+                banneduser.setBanReason("No reason");
+            banneduserRepository.save(banneduser);
+            userRepository.updateType("banned", banneduserId.getUserId());
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
         }
     }
 }
