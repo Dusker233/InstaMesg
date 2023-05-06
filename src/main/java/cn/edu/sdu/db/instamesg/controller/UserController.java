@@ -34,6 +34,9 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -59,6 +62,7 @@ public class UserController {
     private JavaMailSender mailSender;
 
     private Map<String, String> captchaMap = new HashMap<>();
+    private Map<String, Instant> timeMap = new HashMap<>();
 
     private static final String mailUserName = "instamesg@163.com";
 
@@ -164,6 +168,7 @@ public class UserController {
             if(!serverGeneratedCode.equals(authCode))
                 return new SimpleResponse(false, "Wrong 2-FA code");
             session.setAttribute("user", user.getId());
+            // TODO debug
             if(userService.addIP(user.getId(), getIP()))
                 return new SimpleResponse(true, "");
             else {
@@ -223,6 +228,8 @@ public class UserController {
      * @param avatar avatar passed by the client, it can be null
      * @return {@code ApiResponse} shows whether the operation is successful or not
      */
+
+    // TODO test
     @PostMapping("/modify")
     public synchronized ApiResponse modify(HttpSession session, @RequestParam String username, @RequestParam(required = false) String password,
                           @RequestParam(required = false) String type, @RequestParam(required = false) MultipartFile avatar) throws IOException {
@@ -280,10 +287,14 @@ public class UserController {
         if(user == null)
             return new SimpleResponse(false, "This email doesn't exist");
         String verifyCode = String.valueOf(new Random().nextInt(899999) + 100000);
-        if(!captchaMap.containsKey(email))
+        if(!captchaMap.containsKey(email)) {
             captchaMap.put(email, verifyCode);
-        else
+            timeMap.put(email, Instant.now(Clock.offset(Clock.systemUTC(), Duration.ofHours(8))));
+        }
+        else {
             captchaMap.replace(email, verifyCode);
+            timeMap.replace(email, Instant.now(Clock.offset(Clock.systemUTC(), Duration.ofHours(8))));
+        }
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("<html><head><title></title></head><body>");
         stringBuilder.append("您好：<br/>");
@@ -325,10 +336,14 @@ public class UserController {
             return new SimpleResponse(false, "Please get captcha first");
         if(!captchaMap.get(email).equals(captcha))
             return new SimpleResponse(false, "Wrong captcha");
+        if(Instant.now(Clock.offset(Clock.systemUTC(), Duration.ofHours(8))).isAfter(timeMap.get(email).plus(Duration.ofMinutes(5))))
+            return new SimpleResponse(false, "Captcha expired");
         userRepository.updatePassword(User.getHashedPassword(password), user.getId());
+        // TODO reset 2FA
         return new SimpleResponse(true, "");
     }
 
+    // TODO debug
     @PostMapping("/ban")
     public synchronized ApiResponse ban(HttpSession session, @RequestParam String username, @RequestParam(required = false) String reason) {
         if(session.getAttribute("user") == null)
@@ -355,3 +370,5 @@ public class UserController {
         return new DataResponse(true, "", userinfo);
     }
 }
+
+// TODO unban method
