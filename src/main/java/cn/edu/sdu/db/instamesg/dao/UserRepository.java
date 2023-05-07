@@ -11,6 +11,8 @@ import java.time.Instant;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Integer> {
+    @Query("select count(u) from User u where u.email = ?1")
+    long countByEmail(String email);
     User findByUsernameAndPassword(String username, String password);
     User findByUsername(String username);
     User findByEmail(String email);

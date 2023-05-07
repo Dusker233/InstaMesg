@@ -9,15 +9,18 @@ import cn.edu.sdu.db.instamesg.api.ApiResponse;
 import cn.edu.sdu.db.instamesg.api.DataResponse;
 import cn.edu.sdu.db.instamesg.api.SimpleResponse;
 import cn.edu.sdu.db.instamesg.api.UserInfo;
+import cn.edu.sdu.db.instamesg.dao.BanneduserRepository;
 import cn.edu.sdu.db.instamesg.dao.FriendRepository;
 import cn.edu.sdu.db.instamesg.dao.UserRepository;
 import cn.edu.sdu.db.instamesg.filter.CORSFilter;
+import cn.edu.sdu.db.instamesg.pojo.Banneduser;
 import cn.edu.sdu.db.instamesg.pojo.Friend;
 import cn.edu.sdu.db.instamesg.pojo.User;
 import cn.edu.sdu.db.instamesg.service.UserService;
 import com.amdelamar.jotp.OTP;
 import com.amdelamar.jotp.type.Type;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -40,7 +43,8 @@ import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static cn.edu.sdu.db.instamesg.tools.getCilentIp.getIP;
+import static cn.edu.sdu.db.instamesg.tools.get2FAUrl.get2FAUrl;
+import static cn.edu.sdu.db.instamesg.tools.getClientIp.getIP;
 
 //@Slf4j0
 @RestController
@@ -65,6 +69,8 @@ public class UserController {
     private Map<String, Instant> timeMap = new HashMap<>();
 
     private static final String mailUserName = "instamesg@163.com";
+    @Autowired
+    private BanneduserRepository banneduserRepository;
 
     /**
      * Using {@code post} method to register a new user
@@ -81,7 +87,8 @@ public class UserController {
     public synchronized ApiResponse register(@RequestParam String username, @RequestParam String password,
                                 @RequestParam String email, @RequestParam(required = false) MultipartFile avatar, HttpSession session)
                 throws FileNotFoundException, IOException {
-
+        if(userRepository.countByEmail(email) > 0)
+            return new SimpleResponse(false, "This email has been registered");
         if(avatar != null) {
             if(!(avatar.getContentType().contains("image")))
                 return new SimpleResponse(false, "Not an image");
@@ -131,10 +138,7 @@ public class UserController {
             int userId = (int) session.getAttribute("user");
             User user = userRepository.findById(userId).orElse(null);
             assert user != null;
-            String otpUrl = OTP.getURL(user.getSecret(), 6, Type.TOTP, "InstaMesg-2FA", user.getUsername());
-            String twoFaQrUrl = String.format(
-                    "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=%s",
-                    URLEncoder.encode(otpUrl, StandardCharsets.UTF_8));
+            String twoFaQrUrl = get2FAUrl(User.getHashedPassword(user.getSecret()), user.getUsername());
             session.removeAttribute("user");
             return new SimpleResponse(true, twoFaQrUrl);
         }
@@ -151,7 +155,7 @@ public class UserController {
      */
     @PostMapping("/login")
     public synchronized ApiResponse login(@RequestParam String username, @RequestParam String password,
-                                          @RequestParam String authCode, HttpSession session)
+                                          @RequestParam String authCode, HttpSession session, HttpServletRequest request)
             throws IOException, NoSuchAlgorithmException, InvalidKeyException {
         if(session.getAttribute("user") != null) {
             return new SimpleResponse(false, "You've already logged in");
@@ -161,15 +165,22 @@ public class UserController {
 //        System.out.println(username + " " + password + " " + User.getHashedPassword(password));
         User user = userService.getUser(username, password);
         if(user != null) {
-            if(user.getType().equals("deleted") || user.getType().equals("banned"))
-                return new SimpleResponse(false, "This user has been deleted or banned");
-            String serverGeneratedCode = OTP.create(user.getSecret(), OTP.timeInHex(), 6, Type.TOTP);
-//            System.out.println(serverGeneratedCode);
+            if(user.getType().equals("deleted"))
+                return new SimpleResponse(false, "This user has been deleted");
+            if(user.getType().equals("banned")) {
+                Banneduser banneduser = banneduserRepository.findByUserid(user.getId());
+                User executor = userRepository.findById(banneduser.getExecutor()).orElse(null);
+                String reason = banneduser.getBanReason();
+                Instant time = banneduser.getId().getBanTime();
+                return new SimpleResponse(false, "You've been banned by " + executor.getUsername() + " for " + reason + " when " + time);
+            }
+            String serverGeneratedCode = OTP.create(User.getHashedPassword(user.getSecret()), OTP.timeInHex(System.currentTimeMillis()), 6, Type.TOTP);
+            System.out.println(serverGeneratedCode);
+            authCode = authCode.trim();
             if(!serverGeneratedCode.equals(authCode))
                 return new SimpleResponse(false, "Wrong 2-FA code");
             session.setAttribute("user", user.getId());
-            // TODO debug
-            if(userService.addIP(user.getId(), getIP()))
+            if(userService.addIP(user.getId(), getIP(request)))
                 return new SimpleResponse(true, "");
             else {
                 session.removeAttribute("user");
@@ -228,8 +239,6 @@ public class UserController {
      * @param avatar avatar passed by the client, it can be null
      * @return {@code ApiResponse} shows whether the operation is successful or not
      */
-
-    // TODO test
     @PostMapping("/modify")
     public synchronized ApiResponse modify(HttpSession session, @RequestParam String username, @RequestParam(required = false) String password,
                           @RequestParam(required = false) String type, @RequestParam(required = false) MultipartFile avatar) throws IOException {
@@ -240,8 +249,8 @@ public class UserController {
     User admin = userRepository.findById(userId).orElse(null);
     if(user == null)
         return new SimpleResponse(false, "This user doesn't exist");
-    // admin can modify other's information, including banned and deleted user
-    if(!username.equals(user.getUsername())) {
+    // admin can modify other's information, including deleted user
+    if(!username.equals(admin.getUsername())) {
         if(!admin.getType().equals("admin"))
             return new SimpleResponse(false, "You don't have the permission to modify other's information");
         else {
@@ -318,7 +327,7 @@ public class UserController {
     }
 
     /**
-     * use {@code post} method to reset password
+     * use {@code post} method to reset password and 2FA
      * @param email email passed by the client
      * @param password password passed by the client
      * @param captcha captcha passed by the client
@@ -339,11 +348,17 @@ public class UserController {
         if(Instant.now(Clock.offset(Clock.systemUTC(), Duration.ofHours(8))).isAfter(timeMap.get(email).plus(Duration.ofMinutes(5))))
             return new SimpleResponse(false, "Captcha expired");
         userRepository.updatePassword(User.getHashedPassword(password), user.getId());
-        // TODO reset 2FA
-        return new SimpleResponse(true, "");
+        String twoFaUrl = get2FAUrl(User.getHashedPassword(user.getSecret()), user.getUsername());
+        return new SimpleResponse(true, twoFaUrl);
     }
 
-    // TODO debug
+    /**
+     * use {@code post} method to ban a user
+     * @param session session passed by the client
+     * @param username username passed by the client, showing who is going to be banned
+     * @param reason reason passed by the client, showing why this user is banned
+     * @return {@code ApiResponse} shows whether the operation is successful or not
+     */
     @PostMapping("/ban")
     public synchronized ApiResponse ban(HttpSession session, @RequestParam String username, @RequestParam(required = false) String reason) {
         if(session.getAttribute("user") == null)
@@ -356,9 +371,35 @@ public class UserController {
         else if(userService.banUser(admin, username, reason))
             return new SimpleResponse(true, "");
         else
-            return new SimpleResponse(false, "Internal error");
+            return new SimpleResponse(false, "Can't find this user or this user is already banned");
     }
 
+    /**
+     * use {@code post} method to unban a user
+     * @param session session passed by the client
+     * @param username username passed by the client, showing who is going to be unbanned
+     * @return {@code ApiResponse} shows whether the operation is successful or not
+     */
+    @PostMapping("/unban")
+    public synchronized ApiResponse unban(HttpSession session, @RequestParam String username) {
+        if(session.getAttribute("user") == null)
+            return new SimpleResponse(false, "not logged in");
+        int userId = (int)session.getAttribute("user");
+        User admin = userRepository.findById(userId).orElse(null);
+        assert admin != null;
+        if(!admin.getType().equals("admin"))
+            return new SimpleResponse(false, "You don't have the permission to unban user");
+        else if(userService.unbanUser(admin, username))
+            return new SimpleResponse(true, "");
+        else
+            return new SimpleResponse(false, "Can't find this user or this user is not banned");
+    }
+
+    /**
+     * use {@code get} method to get user himself info
+     * @param session session passed by the client
+     * @return {@code DataResponse} shows whether the operation is successful or not
+     */
     @GetMapping("/info")
     public synchronized DataResponse info(HttpSession session) {
         if(session.getAttribute("user") == null)
@@ -369,6 +410,21 @@ public class UserController {
         UserInfo userinfo = new UserInfo(user.getId(), user.getUsername(), user.getEmail(), user.getType(), user.getRegisterTime());
         return new DataResponse(true, "", userinfo);
     }
+
+    /**
+     * use {@code get} method to get user info by username
+     * @param username username passed by the client
+     * @return {@code DataResponse} shows whether the operation is successful or not
+     */
+    @GetMapping("/info/{username}")
+    public synchronized DataResponse info(@PathVariable String username, HttpSession session) {
+        if(session.getAttribute("user") == null)
+            return new DataResponse(false, "not logged in", null);
+        User user = userRepository.findByUsername(username);
+        if(user == null)
+            return new DataResponse(false, "Can't find this user", null);
+        UserInfo userinfo = new UserInfo(user.getId(), user.getUsername(), user.getEmail(), user.getType(), user.getRegisterTime());
+        return new DataResponse(true, "", userinfo);
+    }
 }
 
-// TODO unban method

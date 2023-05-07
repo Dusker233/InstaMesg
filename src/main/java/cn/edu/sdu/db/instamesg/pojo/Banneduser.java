@@ -9,19 +9,21 @@ public class Banneduser {
     @EmbeddedId
     private BanneduserId id;
 
-    @MapsId("userId")
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
-
     @Lob
     @Column(name = "ban_reason")
     private String banReason;
 
-    @MapsId("executor")
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "executor", nullable = false)
-    private User executor;
+    @NotNull
+    @Column(name = "executor", nullable = false)
+    private Integer executor;
+
+    public Integer getExecutor() {
+        return executor;
+    }
+
+    public void setExecutor(Integer executor) {
+        this.executor = executor;
+    }
 
     public BanneduserId getId() {
         return id;
@@ -29,14 +31,6 @@ public class Banneduser {
 
     public void setId(BanneduserId id) {
         this.id = id;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
     }
 
     public String getBanReason() {
@@ -47,11 +41,4 @@ public class Banneduser {
         this.banReason = banReason;
     }
 
-    public User getExecutor() {
-        return executor;
-    }
-
-    public void setExecutor(User executor) {
-        this.executor = executor;
-    }
 }

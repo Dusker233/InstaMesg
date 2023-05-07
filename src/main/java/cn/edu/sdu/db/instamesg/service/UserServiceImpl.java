@@ -110,18 +110,41 @@ public class UserServiceImpl implements UserService {
     @Override
     public synchronized Boolean banUser(User admin, String username, String reason) {
         try {
+            User user = userRepository.findByUsername(username);
+            if(user == null)
+                return false;
+            if(user.getType().equals("banned"))
+                return false;
             Banneduser banneduser = new Banneduser();
             BanneduserId banneduserId = new BanneduserId();
             banneduserId.setUserId(userRepository.findByUsername(username).getId());
             banneduserId.setBanTime(Instant.now(Clock.offset(Clock.systemUTC(), Duration.ofHours(8))));
             banneduser.setId(banneduserId);
-            banneduser.setExecutor(admin);
+            banneduser.setExecutor(admin.getId());
             if(reason != null)
                 banneduser.setBanReason(reason);
             else
                 banneduser.setBanReason("No reason");
             banneduserRepository.save(banneduser);
             userRepository.updateType("banned", banneduserId.getUserId());
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public Boolean unbanUser(User admin, String username) {
+        try {
+            User user = userRepository.findByUsername(username);
+            if(user == null)
+                return false;
+            if(!user.getType().equals("banned"))
+                return false;
+            Banneduser banneduser = banneduserRepository.findByUserid(user.getId());
+            banneduserRepository.delete(banneduser);
+            userRepository.updateType("normal", user.getId());
             return true;
         } catch (Exception e) {
             e.printStackTrace();

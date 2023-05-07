@@ -5,15 +5,10 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 @Entity
-@Table(name = "IpLocation")
+@Table(name = "iplocation")
 public class IpLocation {
     @EmbeddedId
     private IpLocationId id;
-
-    @MapsId("userId")
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
 
     @Size(max = 64)
     @NotNull
@@ -28,13 +23,6 @@ public class IpLocation {
         this.id = id;
     }
 
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
 
     public String getIp() {
         return ip;
