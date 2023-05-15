@@ -19,6 +19,11 @@ public class FriendId implements Serializable {
     @Column(name = "userb_id", nullable = false)
     private Integer userbId;
 
+    public FriendId(Integer id, Integer id1) {
+        this.useraId = id;
+        this.userbId = id1;
+    }
+
     public Integer getUseraId() {
         return useraId;
     }

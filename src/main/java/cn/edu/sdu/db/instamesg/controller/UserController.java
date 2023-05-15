@@ -46,7 +46,6 @@ import java.util.stream.Collectors;
 import static cn.edu.sdu.db.instamesg.tools.get2FAUrl.get2FAUrl;
 import static cn.edu.sdu.db.instamesg.tools.getClientIp.getIP;
 
-//@Slf4j0
 @RestController
 @RequestMapping("/user")
 public class UserController {
@@ -215,15 +214,18 @@ public class UserController {
        if(session.getAttribute("user") == null)
            return new DataResponse(false, "not logged in", null);
        int userId = (int)session.getAttribute("user");
-//        System.out.println(userId);
         List<Friend> FriendRelations = friendRepository.findFriendsByUserid(userId);
         List<User> users = new ArrayList<>();
         // one-way friend relation
         for(Friend friend: FriendRelations) {
-            if(friend.getUsera().getId() == userId)
-                users.add(friend.getUserb());
+            if(friend.getId().getUseraId() == userId) {
+                int userbId = friend.getId().getUserbId();
+                User user = userRepository.findById(userbId).orElse(null);
+                assert user != null;
+                users.add(user);
+            }
         }
-        if(users.size() == 0)
+        if(users.isEmpty())
             return new DataResponse(false, "This user doesn't have friends", null);
         List<UserInfo> results = users.stream().map((u)-> new UserInfo(u.getId(), u.getUsername(),
                 u.getEmail(), u.getType(), u.getRegisterTime())).collect(Collectors.toList());

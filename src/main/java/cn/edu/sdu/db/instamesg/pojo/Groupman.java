@@ -8,38 +8,12 @@ public class Groupman {
     @EmbeddedId
     private GroupmanId id;
 
-    @MapsId("groupId")
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "group_id", nullable = false)
-    private Group group;
-
-    @MapsId("managerId")
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "manager_id", nullable = false)
-    private User manager;
-
     public GroupmanId getId() {
         return id;
     }
 
     public void setId(GroupmanId id) {
         this.id = id;
-    }
-
-    public Group getGroup() {
-        return group;
-    }
-
-    public void setGroup(Group group) {
-        this.group = group;
-    }
-
-    public User getManager() {
-        return manager;
-    }
-
-    public void setManager(User manager) {
-        this.manager = manager;
     }
 
 }

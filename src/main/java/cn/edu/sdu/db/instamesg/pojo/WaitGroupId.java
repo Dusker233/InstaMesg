@@ -9,27 +9,19 @@ import java.io.Serializable;
 import java.util.Objects;
 
 @Embeddable
-public class GroupuserId implements Serializable {
-    private static final long serialVersionUID = -4817266787274014177L;
-    @NotNull
-    @Column(name = "group_id", nullable = false)
-    private Integer groupId;
-
+public class WaitGroupId implements Serializable {
+    private static final long serialVersionUID = -1305179239854359390L;
     @NotNull
     @Column(name = "user_id", nullable = false)
     private Integer userId;
 
-    public GroupuserId(Integer id, Integer id1) {
-        this.groupId = id;
-        this.userId = id1;
-    }
+    @NotNull
+    @Column(name = "group_id", nullable = false)
+    private Integer groupId;
 
-    public Integer getGroupId() {
-        return groupId;
-    }
-
-    public void setGroupId(Integer groupId) {
-        this.groupId = groupId;
+    public WaitGroupId(Integer userid, Integer groupid) {
+        this.userId = userid;
+        this.groupId = groupid;
     }
 
     public Integer getUserId() {
@@ -40,11 +32,19 @@ public class GroupuserId implements Serializable {
         this.userId = userId;
     }
 
+    public Integer getGroupId() {
+        return groupId;
+    }
+
+    public void setGroupId(Integer groupId) {
+        this.groupId = groupId;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
-        GroupuserId entity = (GroupuserId) o;
+        WaitGroupId entity = (WaitGroupId) o;
         return Objects.equals(this.groupId, entity.groupId) &&
                 Objects.equals(this.userId, entity.userId);
     }
