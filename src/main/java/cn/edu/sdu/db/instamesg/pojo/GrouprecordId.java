@@ -30,6 +30,9 @@ public class GrouprecordId implements Serializable {
     @Column(name = "add_time", nullable = false)
     private Instant addTime;
 
+    public GrouprecordId() {
+    }
+
     public GrouprecordId(Group group, User executor, User user) {
         this.groupId = group.getId();
         this.managerId = executor.getId();

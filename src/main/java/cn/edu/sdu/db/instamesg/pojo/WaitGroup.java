@@ -21,6 +21,9 @@ public class WaitGroup {
     @Column(name = "time", nullable = false)
     private Instant time;
 
+    public WaitGroup() {
+    }
+
     public WaitGroup(User user, Group group, String reason) {
         this.id = new WaitGroupId(user.getId(), group.getId());
         this.reason = reason;

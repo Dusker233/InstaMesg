@@ -8,6 +8,9 @@ public class Friend {
     @EmbeddedId
     private FriendId id;
 
+    public Friend() {
+    }
+
     public Friend(User user, User friend) {
         this.id = new FriendId(user.getId(), friend.getId());
     }

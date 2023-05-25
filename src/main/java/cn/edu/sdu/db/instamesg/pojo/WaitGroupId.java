@@ -19,6 +19,9 @@ public class WaitGroupId implements Serializable {
     @Column(name = "group_id", nullable = false)
     private Integer groupId;
 
+    public WaitGroupId() {
+    }
+
     public WaitGroupId(Integer userid, Integer groupid) {
         this.userId = userid;
         this.groupId = groupid;

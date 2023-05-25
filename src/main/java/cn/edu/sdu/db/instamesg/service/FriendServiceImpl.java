@@ -13,19 +13,12 @@ public class FriendServiceImpl implements FriendService{
     @Autowired
     private WaitUserRepository waitUserRepository;
 
-    @Autowired
-    private GroupuserRepository groupuserRepository;
-
-    @Autowired
-    private WaitGroupRepository waitGroupRepository;
-
-    @Autowired
-    private GroupRecordRepository groupRecordRepository;
 
     @Override
     public Boolean addFriend(User user, User friend, String reason) {
         try {
-            if(friendRepository.findByUserAIdandUserBId(user.getId(), friend.getId()) != null)
+            Friend relationship = friendRepository.findById(new FriendId(user.getId(), friend.getId())).orElse(null);
+            if(relationship != null)
                 return false;
             waitUserRepository.save(new WaitUser(user, friend, reason));
             return true;
@@ -36,22 +29,11 @@ public class FriendServiceImpl implements FriendService{
     }
 
     @Override
-    public Boolean addGroup(User user, Group group, String reason) {
-        try {
-            if(groupuserRepository.findByUseridAndGroupid(user.getId(), group.getId()) != null)
-                return false;
-            waitGroupRepository.save(new WaitGroup(user, group, reason));
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    @Override
     public Boolean acceptFriend(User user, User friend) {
         try {
-            waitUserRepository.deleteById(new WaitUserId(user.getId(), friend.getId()));
+            waitUserRepository.deleteById(new WaitUserId(friend.getId(), user.getId()));
+            if(waitUserRepository.findById(new WaitUserId(user.getId(), friend.getId())).orElse(null) != null)
+                waitUserRepository.deleteById(new WaitUserId(user.getId(), friend.getId()));
             friendRepository.save(new Friend(user, friend));
             friendRepository.save(new Friend(friend, user));
             return true;
@@ -64,7 +46,7 @@ public class FriendServiceImpl implements FriendService{
     @Override
     public Boolean denyFriend(User user, User friend) {
         try {
-            waitUserRepository.deleteById(new WaitUserId(user.getId(), friend.getId()));
+            waitUserRepository.deleteById(new WaitUserId(friend.getId(), user.getId()));
             return true;
         } catch (Exception e) {
             e.printStackTrace();
@@ -73,23 +55,9 @@ public class FriendServiceImpl implements FriendService{
     }
 
     @Override
-    public Boolean acceptGroup(User user, User executor, Group group) {
+    public Boolean deleteFriend(User fromUser, User toUser) {
         try {
-            waitGroupRepository.deleteById(new WaitGroupId(user.getId(), group.getId()));
-            groupuserRepository.save(new Groupuser(user, group));
-            groupRecordRepository.save(new Grouprecord(group, executor, user, "accept"));
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    @Override
-    public Boolean denyGroup(User user, User executor, Group group) {
-        try {
-            waitGroupRepository.deleteById(new WaitGroupId(user.getId(), group.getId()));
-            groupRecordRepository.save(new Grouprecord(group, executor, user, "deny"));
+            friendRepository.deleteById(new FriendId(fromUser.getId(), toUser.getId()));
             return true;
         } catch (Exception e) {
             e.printStackTrace();

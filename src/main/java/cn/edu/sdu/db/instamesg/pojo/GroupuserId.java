@@ -19,9 +19,12 @@ public class GroupuserId implements Serializable {
     @Column(name = "user_id", nullable = false)
     private Integer userId;
 
-    public GroupuserId(Integer id, Integer id1) {
-        this.groupId = id;
-        this.userId = id1;
+    public GroupuserId() {
+    }
+
+    public GroupuserId(Integer groupId, Integer userId) {
+        this.groupId = groupId;
+        this.userId = userId;
     }
 
     public Integer getGroupId() {

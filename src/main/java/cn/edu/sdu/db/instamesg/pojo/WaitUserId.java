@@ -19,6 +19,9 @@ public class WaitUserId implements Serializable {
     @Column(name = "user_to_id", nullable = false)
     private Integer userToId;
 
+    public WaitUserId() {
+    }
+
     public WaitUserId(Integer id, Integer id1) {
         this.userFromId = id;
         this.userToId = id1;

@@ -14,6 +14,9 @@ public class Grouprecord {
     @Column(name = "status", nullable = false)
     private String status;
 
+    public Grouprecord() {
+    }
+
     public Grouprecord(Group group, User executor, User user, String status) {
         this.id = new GrouprecordId(group, executor, user);
         this.status = status;

@@ -8,6 +8,9 @@ public class Groupuser {
     @EmbeddedId
     private GroupuserId id;
 
+    public Groupuser() {
+    }
+
     public Groupuser(User user, Group group) {
         this.id = new GroupuserId(group.getId(), user.getId());
     }

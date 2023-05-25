@@ -21,6 +21,9 @@ public class WaitUser {
     @Column(name = "time", nullable = false)
     private Instant time;
 
+    public WaitUser() {
+    }
+
     public WaitUser(User user, User friend, String reason) {
         this.id = new WaitUserId(user.getId(), friend.getId());
         this.reason = reason;
