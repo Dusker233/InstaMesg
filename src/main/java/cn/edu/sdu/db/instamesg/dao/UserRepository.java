@@ -40,5 +40,5 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     @Transactional
     @Modifying
     @Query("update User u set u.portrait = ?1 where u.id = ?2")
-    void updatePortrait(byte[] bytes, Integer id);
+    void updatePortrait(String path, Integer id);
 }

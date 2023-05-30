@@ -20,7 +20,7 @@ public class File {
 
     @NotNull
     @Column(name = "file", nullable = false)
-    private byte[] file;
+    private String file;
 
     @NotNull
     @Column(name = "upload_time", nullable = false)
@@ -47,11 +47,11 @@ public class File {
         this.fileName = fileName;
     }
 
-    public byte[] getFile() {
+    public String getFile() {
         return file;
     }
 
-    public void setFile(byte[] file) {
+    public void setFile(String file) {
         this.file = file;
     }
 

@@ -45,7 +45,7 @@ public class User {
 
     @NotNull
     @Column(name = "portrait", nullable = false)
-    private byte[] portrait;
+    private String portrait;
 
     @NotNull
     @Lob
@@ -92,11 +92,11 @@ public class User {
         this.registerTime = registerTime;
     }
 
-    public byte[] getPortrait() {
+    public String getPortrait() {
         return portrait;
     }
 
-    public void setPortrait(byte[] portrait) {
+    public void setPortrait(String portrait) {
         this.portrait = portrait;
     }
 

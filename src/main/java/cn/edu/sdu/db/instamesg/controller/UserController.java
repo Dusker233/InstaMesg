@@ -17,6 +17,7 @@ import cn.edu.sdu.db.instamesg.pojo.Banneduser;
 import cn.edu.sdu.db.instamesg.pojo.Friend;
 import cn.edu.sdu.db.instamesg.pojo.User;
 import cn.edu.sdu.db.instamesg.service.UserService;
+import cn.edu.sdu.db.instamesg.tools.ImageUtils;
 import com.amdelamar.jotp.OTP;
 import com.amdelamar.jotp.type.Type;
 import jakarta.mail.internet.MimeMessage;
@@ -35,6 +36,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.Clock;
@@ -63,6 +66,9 @@ public class UserController {
 
     @Autowired
     private JavaMailSender mailSender;
+
+    @Autowired
+    private FileController fileController;
 
     private Map<String, String> captchaMap = new HashMap<>();
     private Map<String, Instant> timeMap = new HashMap<>();
@@ -179,8 +185,10 @@ public class UserController {
             if(!serverGeneratedCode.equals(authCode))
                 return new SimpleResponse(false, "Wrong 2-FA code");
             session.setAttribute("user", user.getId());
-            if(userService.addIP(user.getId(), getIP(request)))
-                return new SimpleResponse(true, "");
+            if(userService.addIP(user.getId(), getIP(request))) {
+                session.setAttribute("user", user.getId());
+                return new DataResponse(true, "", user.getId());
+            }
             else {
                 session.removeAttribute("user");
                 return new SimpleResponse(false, "Can't get your IP address");
@@ -228,7 +236,7 @@ public class UserController {
         if(users.isEmpty())
             return new DataResponse(false, "This user doesn't have friends", null);
         List<UserInfo> results = users.stream().map((u)-> new UserInfo(u.getId(), u.getUsername(),
-                u.getEmail(), u.getType(), u.getRegisterTime())).collect(Collectors.toList());
+                u.getEmail(), u.getType(), u.getPortrait(), u.getRegisterTime())).collect(Collectors.toList());
         return new DataResponse(true, "", results);
     }
 
@@ -263,7 +271,10 @@ public class UserController {
             else if(type != null)
                 return new SimpleResponse(false, "Wrong type");
             if(avatar != null) {
-                userRepository.updatePortrait(avatar.getBytes(), user.getId());
+                String path = fileController.uploadAvatar(avatar, user.getUsername());
+                if(path.equals("error"))
+                    return new SimpleResponse(false, "Can't upload avatar");
+                userRepository.updatePortrait(path, user.getId());
             }
         }
     }
@@ -279,7 +290,10 @@ public class UserController {
                 return new SimpleResponse(false, "Wrong type");
         }
         if(avatar != null) {
-            userRepository.updatePortrait(avatar.getBytes(), user.getId());
+            String path = fileController.uploadAvatar(avatar, user.getUsername());
+            if(path.equals("error"))
+                return new SimpleResponse(false, "Can't upload avatar");
+            userRepository.updatePortrait(path, user.getId());
         }
     }
     return new SimpleResponse(true, "");
@@ -309,7 +323,9 @@ public class UserController {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("<html><head><title></title></head><body>");
         stringBuilder.append("您好：<br/>");
-        stringBuilder.append("您的验证码是：").append(verifyCode).append("<br/>");
+        stringBuilder.append("您的验证码是：")
+                .append(verifyCode)
+                .append("<br/>");
         stringBuilder.append("您可以复制此验证码并返回至InstaMesg，以验证您的邮箱。<br/>");
         stringBuilder.append("此验证码只能使用一次，在5分钟内有效。验证成功则自动失效。<br/>");
         stringBuilder.append("如果您没有进行上述操作，请忽略此邮件。");
@@ -409,7 +425,7 @@ public class UserController {
         int userId = (int)session.getAttribute("user");
         User user = userRepository.findById(userId).orElse(null);
         assert user != null;
-        UserInfo userinfo = new UserInfo(user.getId(), user.getUsername(), user.getEmail(), user.getType(), user.getRegisterTime());
+        UserInfo userinfo = new UserInfo(user.getId(), user.getUsername(), user.getEmail(), user.getType(), user.getPortrait(), user.getRegisterTime());
         return new DataResponse(true, "", userinfo);
     }
 
@@ -425,7 +441,7 @@ public class UserController {
         User user = userRepository.findByUsername(username);
         if(user == null)
             return new DataResponse(false, "Can't find this user", null);
-        UserInfo userinfo = new UserInfo(user.getId(), user.getUsername(), user.getEmail(), user.getType(), user.getRegisterTime());
+        UserInfo userinfo = new UserInfo(user.getId(), user.getUsername(), user.getEmail(), user.getType(), user.getPortrait(), user.getRegisterTime());
         return new DataResponse(true, "", userinfo);
     }
 }

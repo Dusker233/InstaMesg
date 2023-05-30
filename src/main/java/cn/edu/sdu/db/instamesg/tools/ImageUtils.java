@@ -4,6 +4,12 @@ package cn.edu.sdu.db.instamesg.tools; /**
  * @version 1.0
  */
 
+import cn.xuyanwu.spring.file.storage.FileInfo;
+import cn.xuyanwu.spring.file.storage.FileStorageService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.multipart.MultipartFile;
+
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -12,6 +18,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 public class ImageUtils {
+
+    private static final String webdavServer = "http://124.70.165.173:11451/instamesg/avatar/";
 
     /**
      * Resize the image
@@ -51,4 +59,6 @@ public class ImageUtils {
     public static synchronized BufferedImage bytesToImage(byte[] bytes) throws IOException {
         return ImageIO.read(new ByteArrayInputStream(bytes));
     }
+
+
 }

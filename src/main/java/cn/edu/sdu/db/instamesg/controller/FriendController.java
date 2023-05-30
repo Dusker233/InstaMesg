@@ -76,7 +76,7 @@ public class FriendController {
             if(user == null || user.getType().equals("deleted"))
                 continue;
             addFriendInfoList.add(new addFriendInfo(
-                    new UserInfo(user.getId(), user.getUsername(), user.getEmail(), user.getType(), user.getRegisterTime()
+                    new UserInfo(user.getId(), user.getUsername(), user.getEmail(), user.getType(), user.getPortrait(), user.getRegisterTime()
             ),
                     waitUser.getReason(),
                     waitUser.getTime()));
@@ -98,7 +98,7 @@ public class FriendController {
             if(user == null || user.getType().equals("deleted"))
                 continue;
             addFriendInfoList.add(new addFriendInfo(
-                    new UserInfo(user.getId(), user.getUsername(), user.getEmail(), user.getType(), user.getRegisterTime()
+                    new UserInfo(user.getId(), user.getUsername(), user.getEmail(), user.getType(), user.getPortrait(), user.getRegisterTime()
             ),
                     waitUser.getReason(),
                     waitUser.getTime()));

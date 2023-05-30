@@ -7,13 +7,15 @@ public class UserInfo {
     private String userName;
     private String email;
     private String type;
+    private String avatarPath;
     private Instant registerTime;
 
-    public UserInfo(Integer userId, String userName, String email, String type, Instant registerTime) {
+    public UserInfo(Integer userId, String userName, String email, String type, String avatarPath, Instant registerTime) {
         this.userId = userId;
         this.userName = userName;
         this.email = email;
         this.type = type;
+        this.avatarPath = avatarPath;
         this.registerTime = registerTime;
     }
 
@@ -55,5 +57,13 @@ public class UserInfo {
 
     public void setRegisterTime(Instant registerTime) {
         this.registerTime = registerTime;
+    }
+
+    public String getAvatarPath() {
+        return avatarPath;
+    }
+
+    public void setAvatarPath(String avatarPath) {
+        this.avatarPath = avatarPath;
     }
 }

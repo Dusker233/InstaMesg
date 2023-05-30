@@ -22,7 +22,7 @@ public class Message {
     private String content;
 
     @Column(name = "picture")
-    private byte[] picture;
+    private String picture;
 
     @NotNull
     @Column(name = "send_time", nullable = false)
@@ -52,11 +52,11 @@ public class Message {
         this.content = content;
     }
 
-    public byte[] getPicture() {
+    public String getPicture() {
         return picture;
     }
 
-    public void setPicture(byte[] picture) {
+    public void setPicture(String picture) {
         this.picture = picture;
     }
 

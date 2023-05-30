@@ -5,18 +5,24 @@
  */
 package cn.edu.sdu.db.instamesg.service;
 
+import cn.edu.sdu.db.instamesg.controller.FileController;
 import cn.edu.sdu.db.instamesg.dao.BanneduserRepository;
 import cn.edu.sdu.db.instamesg.dao.IpLocationRepository;
 import cn.edu.sdu.db.instamesg.dao.UserRepository;
 import cn.edu.sdu.db.instamesg.pojo.*;
 import cn.edu.sdu.db.instamesg.tools.AvatarResize;
+import cn.edu.sdu.db.instamesg.tools.ImageUtils;
+import cn.xuyanwu.spring.file.storage.FileInfo;
 import com.amdelamar.jotp.OTP;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -32,6 +38,11 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private BanneduserRepository banneduserRepository;
+
+    @Autowired
+    private FileController fileController;
+
+    private ImageUtils imageUtils;
 
     /**
      * Get the user by username and password
@@ -62,6 +73,14 @@ public class UserServiceImpl implements UserService {
                 return 3;
             AvatarResize avatarResize = new AvatarResize();
             MultipartFile Avatar = avatarResize.resize(avatar);
+            String path = null;
+//            System.out.println(avatar.getName());
+            if(avatar.getName().equals("defaultAvatar"))
+                path = "http://124.70.165.173:11451/instamesg/avatar/defaultAvatar.png";
+            else
+                path = fileController.uploadAvatar(Avatar, username);
+            if(path.equals("error"))
+                return 2;
             // Check if exists a user whose username equals input and type equals "deleted"
             User prevUser = userRepository.findByUsername(username);
             if(prevUser != null) {
@@ -70,7 +89,7 @@ public class UserServiceImpl implements UserService {
                     userRepository.updatePassword(User.getHashedPassword(password), prevUser.getId());
                     userRepository.updateEmail(email, prevUser.getId());
                     userRepository.updateRegisterTime(Instant.now(Clock.offset(Clock.systemUTC(), Duration.ofHours(8))), prevUser.getId());
-                    userRepository.updatePortrait(avatar.getBytes(), prevUser.getId());
+                    userRepository.updatePortrait(path, prevUser.getId());
                     return 0;
                 }
                 else {
@@ -83,7 +102,7 @@ public class UserServiceImpl implements UserService {
             user.setSecret(OTP.randomBase32(64));
             user.setEmail(email);
             user.setRegisterTime(Instant.now(Clock.offset(Clock.systemUTC(), Duration.ofHours(8))));
-            user.setPortrait(Avatar.getBytes());
+            user.setPortrait(path);
             user.setType("normal");
             userRepository.save(user);
             return 0;
