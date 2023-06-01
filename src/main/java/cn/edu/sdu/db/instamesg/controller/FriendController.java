@@ -30,32 +30,57 @@ public class FriendController {
     @Autowired
     private WaitUserRepository waitUserRepository;
 
+    @GetMapping("/list")
+    public synchronized ApiResponse listFriend(HttpSession session) {
+        if(session.getAttribute("user") == null)
+            return new SimpleResponse(false, "You are not logged in");
+        int userId = (int) session.getAttribute("user");
+        List<Friend> friendList = friendRepository.findAllByUserAId(userId);
+        if(friendList == null || friendList.isEmpty())
+            return new SimpleResponse(false, "You have no friends");
+        List<UserInfo> userInfoList = new ArrayList<>();
+        for(Friend friend : friendList) {
+            User user = userRepository.findById(friend.getId().getUserbId()).orElse(null);
+            if(user == null)
+                continue;
+            if(!user.getType().equals("normal"))
+                continue;
+            userInfoList.add(new UserInfo(user.getId(), user.getUsername(), user.getEmail(), user.getType(), user.getPortrait(), user.getRegisterTime()));
+        }
+        return new DataResponse(true, "", userInfoList);
+    }
+
+    @GetMapping("/getUser")
+    public synchronized ApiResponse findFriend(HttpSession session, @RequestParam String name) {
+        if(session.getAttribute("user") == null)
+            return new SimpleResponse(false, "You are not logged in");
+        User user = null;
+        if(name.matches("^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\\.[a-zA-Z0-9_-]+)+$"))
+            user = userRepository.findByEmail(name);
+        else
+            user = userRepository.findByUsername(name);
+        if(user == null)
+            return new SimpleResponse(false, "User not found");
+        if(user.getId() == (int) session.getAttribute("user"))
+            return new SimpleResponse(false, "You can't add yourself as friend");
+        return new DataResponse(true, "", new UserInfo(user.getId(), user.getUsername(), user.getEmail(), user.getType(), user.getPortrait(), user.getRegisterTime()));
+    }
+
     @PostMapping("/addFriend")
-    public synchronized ApiResponse addFriend(HttpSession session, @RequestParam(required = false) String username,
-                                               @RequestParam(required = false) String email, @RequestParam(required = false) String reason) {
+    public synchronized ApiResponse addFriend(HttpSession session, @RequestParam String friendid, @RequestParam(required = false) String reason) {
         if (session.getAttribute("user") == null) {
             return new SimpleResponse(false, "You are not logged in");
         }
-        if(username == null && email == null) {
-            return new SimpleResponse(false, "Username and email can't be null at the same time");
-        }
-        if(username != null && email != null) {
-            return new SimpleResponse(false, "Username and email can't be not null at the same time");
-        }
         int userId = (int) session.getAttribute("user");
         User user = userRepository.findById(userId).orElse(null);
-        User friend;
-        if(username != null)
-            friend = userRepository.findByUsername(username);
-        else
-            friend = userRepository.findByEmail(email);
+        User friend = userRepository.findById(Integer.parseInt(friendid)).orElse(null);
         if(friend == null)
             return new SimpleResponse(false, "Friend not found");
         Friend relationship = friendRepository.findById(new FriendId(userId, friend.getId())).orElse(null);
         if(relationship != null)
             return new SimpleResponse(false, "You are already friends");
-        if(friend.getId().equals(userId))
-            return new SimpleResponse(false, "You can't add yourself as friend");
+        if(friend.getType().equals("deleted") || friend.getType().equals("banned"))
+            return new SimpleResponse(false, "This user is not available");
         if(friendService.addFriend(user, friend, reason))
             return new SimpleResponse(true, "Add friend successfully, waiting for friend's confirmation");
         else

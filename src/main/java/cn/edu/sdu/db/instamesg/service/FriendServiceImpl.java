@@ -31,6 +31,11 @@ public class FriendServiceImpl implements FriendService{
     @Override
     public Boolean acceptFriend(User user, User friend) {
         try {
+            Friend relationship = friendRepository.findById(new FriendId(user.getId(), friend.getId())).orElse(null);
+            if(relationship != null) {
+                waitUserRepository.deleteById(new WaitUserId(friend.getId(), user.getId()));
+                return false;
+            }
             waitUserRepository.deleteById(new WaitUserId(friend.getId(), user.getId()));
             if(waitUserRepository.findById(new WaitUserId(user.getId(), friend.getId())).orElse(null) != null)
                 waitUserRepository.deleteById(new WaitUserId(user.getId(), friend.getId()));

@@ -27,7 +27,7 @@ public class WaitGroup {
     public WaitGroup(User user, Group group, String reason) {
         this.id = new WaitGroupId(user.getId(), group.getId());
         this.reason = reason;
-        this.time = Instant.now(Clock.offset(Clock.systemUTC(), Duration.ofHours(8)));
+        this.time = Instant.now();
     }
 
     public WaitGroupId getId() {

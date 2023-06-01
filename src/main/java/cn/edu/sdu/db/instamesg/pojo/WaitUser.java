@@ -27,7 +27,7 @@ public class WaitUser {
     public WaitUser(User user, User friend, String reason) {
         this.id = new WaitUserId(user.getId(), friend.getId());
         this.reason = reason;
-        this.time = Instant.now(Clock.offset(Clock.systemUTC(), Duration.ofHours(8)));
+        this.time = Instant.now();
     }
 
     public WaitUserId getId() {

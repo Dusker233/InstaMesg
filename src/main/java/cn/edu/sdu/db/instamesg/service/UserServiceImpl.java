@@ -88,7 +88,7 @@ public class UserServiceImpl implements UserService {
                     userRepository.updateType("normal", prevUser.getId());
                     userRepository.updatePassword(User.getHashedPassword(password), prevUser.getId());
                     userRepository.updateEmail(email, prevUser.getId());
-                    userRepository.updateRegisterTime(Instant.now(Clock.offset(Clock.systemUTC(), Duration.ofHours(8))), prevUser.getId());
+                    userRepository.updateRegisterTime(Instant.now(), prevUser.getId());
                     userRepository.updatePortrait(path, prevUser.getId());
                     return 0;
                 }
@@ -101,7 +101,7 @@ public class UserServiceImpl implements UserService {
             user.setPassword(password);
             user.setSecret(OTP.randomBase32(64));
             user.setEmail(email);
-            user.setRegisterTime(Instant.now(Clock.offset(Clock.systemUTC(), Duration.ofHours(8))));
+            user.setRegisterTime(Instant.now());
             user.setPortrait(path);
             user.setType("normal");
             userRepository.save(user);
@@ -119,7 +119,7 @@ public class UserServiceImpl implements UserService {
         IpLocation ipLocation = new IpLocation();
         IpLocationId ipLocationId = new IpLocationId();
         ipLocationId.setUserId(id);
-        ipLocationId.setLoginTime(Instant.now(Clock.offset(Clock.systemUTC(), Duration.ofHours(8))));
+        ipLocationId.setLoginTime(Instant.now());
         ipLocation.setId(ipLocationId);
         ipLocation.setIp(ip);
         ipLocationRepository.save(ipLocation);
@@ -137,7 +137,7 @@ public class UserServiceImpl implements UserService {
             Banneduser banneduser = new Banneduser();
             BanneduserId banneduserId = new BanneduserId();
             banneduserId.setUserId(userRepository.findByUsername(username).getId());
-            banneduserId.setBanTime(Instant.now(Clock.offset(Clock.systemUTC(), Duration.ofHours(8))));
+            banneduserId.setBanTime(Instant.now());
             banneduser.setId(banneduserId);
             banneduser.setExecutor(admin.getId());
             if(reason != null)

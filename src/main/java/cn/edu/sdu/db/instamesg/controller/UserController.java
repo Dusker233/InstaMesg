@@ -314,11 +314,11 @@ public class UserController {
         String verifyCode = String.valueOf(new Random().nextInt(899999) + 100000);
         if(!captchaMap.containsKey(email)) {
             captchaMap.put(email, verifyCode);
-            timeMap.put(email, Instant.now(Clock.offset(Clock.systemUTC(), Duration.ofHours(8))));
+            timeMap.put(email, Instant.now());
         }
         else {
             captchaMap.replace(email, verifyCode);
-            timeMap.replace(email, Instant.now(Clock.offset(Clock.systemUTC(), Duration.ofHours(8))));
+            timeMap.replace(email, Instant.now());
         }
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("<html><head><title></title></head><body>");
@@ -363,7 +363,7 @@ public class UserController {
             return new SimpleResponse(false, "Please get captcha first");
         if(!captchaMap.get(email).equals(captcha))
             return new SimpleResponse(false, "Wrong captcha");
-        if(Instant.now(Clock.offset(Clock.systemUTC(), Duration.ofHours(8))).isAfter(timeMap.get(email).plus(Duration.ofMinutes(5))))
+        if(Instant.now().isAfter(timeMap.get(email).plus(Duration.ofMinutes(5))))
             return new SimpleResponse(false, "Captcha expired");
         userRepository.updatePassword(User.getHashedPassword(password), user.getId());
         String twoFaUrl = get2FAUrl(User.getHashedPassword(user.getSecret()), user.getUsername());

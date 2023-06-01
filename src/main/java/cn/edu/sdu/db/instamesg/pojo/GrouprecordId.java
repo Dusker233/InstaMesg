@@ -37,7 +37,7 @@ public class GrouprecordId implements Serializable {
         this.groupId = group.getId();
         this.managerId = executor.getId();
         this.userId = user.getId();
-        this.addTime = Instant.now(Clock.offset(Clock.systemUTC(), Duration.ofHours(8)));
+        this.addTime = Instant.now();
     }
 
     public Integer getGroupId() {
