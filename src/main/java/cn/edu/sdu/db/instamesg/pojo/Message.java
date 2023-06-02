@@ -3,13 +3,17 @@ package cn.edu.sdu.db.instamesg.pojo;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 
+import java.io.Serializable;
 import java.time.Instant;
 
 @Entity
 @Table(name = "messages")
-public class Message {
+public class Message implements Serializable {
+    private static final long serialVersionUID = -6641225216975364856L;
+
     @Id
     @Column(name = "message_id", nullable = false)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @NotNull

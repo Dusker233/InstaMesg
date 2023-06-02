@@ -10,23 +10,15 @@ import cn.edu.sdu.db.instamesg.dao.BanneduserRepository;
 import cn.edu.sdu.db.instamesg.dao.IpLocationRepository;
 import cn.edu.sdu.db.instamesg.dao.UserRepository;
 import cn.edu.sdu.db.instamesg.pojo.*;
-import cn.edu.sdu.db.instamesg.tools.AvatarResize;
+import cn.edu.sdu.db.instamesg.tools.avatarResize;
 import cn.edu.sdu.db.instamesg.tools.ImageUtils;
-import cn.xuyanwu.spring.file.storage.FileInfo;
 import com.amdelamar.jotp.OTP;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.Clock;
-import java.time.Duration;
 import java.time.Instant;
-import java.time.ZonedDateTime;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -71,7 +63,7 @@ public class UserServiceImpl implements UserService {
         try {
             if(password.length() < 6 || !password.matches(".*[0-9].*") || !password.matches(".*[a-zA-Z].*") || password.length() > 24)
                 return 3;
-            AvatarResize avatarResize = new AvatarResize();
+            avatarResize avatarResize = new avatarResize();
             MultipartFile Avatar = avatarResize.resize(avatar);
             String path = null;
 //            System.out.println(avatar.getName());

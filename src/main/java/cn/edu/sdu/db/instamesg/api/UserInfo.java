@@ -1,5 +1,7 @@
 package cn.edu.sdu.db.instamesg.api;
 
+import cn.edu.sdu.db.instamesg.pojo.User;
+
 import java.time.Instant;
 
 public class UserInfo {
@@ -9,6 +11,19 @@ public class UserInfo {
     private String type;
     private String avatarPath;
     private Instant registerTime;
+
+    public UserInfo() {
+
+    }
+
+    public UserInfo(User user) {
+        this.userId = user.getId();
+        this.userName = user.getUsername();
+        this.email = user.getEmail();
+        this.type = user.getType();
+        this.avatarPath = user.getPortrait();
+        this.registerTime = user.getRegisterTime();
+    }
 
     public UserInfo(Integer userId, String userName, String email, String type, String avatarPath, Instant registerTime) {
         this.userId = userId;

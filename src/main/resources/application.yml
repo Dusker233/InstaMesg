@@ -3,6 +3,9 @@ server:
   tomcat:
     max-swallow-size: 100MB
 spring:
+  jackson:
+    serialization:
+      fail-on-empty-beans: false
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     password: 7ad9f1175c13e4d3

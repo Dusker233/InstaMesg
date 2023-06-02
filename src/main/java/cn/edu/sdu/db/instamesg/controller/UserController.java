@@ -431,14 +431,14 @@ public class UserController {
 
     /**
      * use {@code get} method to get user info by username
-     * @param username username passed by the client
+     * @param userid userid passed by the client
      * @return {@code DataResponse} shows whether the operation is successful or not
      */
-    @GetMapping("/info/{username}")
-    public synchronized DataResponse info(@PathVariable String username, HttpSession session) {
+    @GetMapping("/info/{userid}")
+    public synchronized DataResponse info(@PathVariable String userid, HttpSession session) {
         if(session.getAttribute("user") == null)
             return new DataResponse(false, "not logged in", null);
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findById(Integer.parseInt(userid)).orElse(null);
         if(user == null)
             return new DataResponse(false, "Can't find this user", null);
         UserInfo userinfo = new UserInfo(user.getId(), user.getUsername(), user.getEmail(), user.getType(), user.getPortrait(), user.getRegisterTime());

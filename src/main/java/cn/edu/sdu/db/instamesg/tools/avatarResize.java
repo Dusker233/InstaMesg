@@ -14,7 +14,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class AvatarResize {
+public class avatarResize {
     /**
      * Resize the avatar
      * @param avatar avatar passed by the client, it can't be null
