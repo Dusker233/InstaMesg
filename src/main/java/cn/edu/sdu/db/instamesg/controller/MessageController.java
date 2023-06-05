@@ -16,6 +16,7 @@ import cn.edu.sdu.db.instamesg.dao.UserRepository;
 import cn.edu.sdu.db.instamesg.service.MessageService;
 import jakarta.servlet.http.HttpSession;
 
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 @RestController
@@ -34,8 +35,7 @@ public class MessageController {
     private MessageService messageService;
 
     @GetMapping("/listFriendMessage")
-    public synchronized ApiResponse listFriendMessage(HttpSession session, @RequestParam String userid) {
-        System.out.println(userid);
+    public synchronized ApiResponse listFriendMessage(HttpSession session, @RequestParam String userid) throws UnsupportedEncodingException {
         if(session.getAttribute("user") == null)
         	return new SimpleResponse(false, "please log in first");
         int senderId = (int) session.getAttribute("user");
@@ -52,12 +52,12 @@ public class MessageController {
     }
 
     @GetMapping("/encryptTest")
-    public synchronized ApiResponse encryptTest(@RequestParam String text) {
+    public synchronized ApiResponse encryptTest(@RequestParam String text) throws UnsupportedEncodingException {
         return new DataResponse(true, "", messageEncryptAndDecrypt.encryptMessage(text));
     }
 
     @GetMapping("/decryptTest")
-    public synchronized ApiResponse decryptTest(@RequestParam String text) {
+    public synchronized ApiResponse decryptTest(@RequestParam String text) throws UnsupportedEncodingException {
         return new DataResponse(true, "", messageEncryptAndDecrypt.decryptMessage(text));
     }
 

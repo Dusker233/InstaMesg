@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -57,7 +58,7 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public List<friendMessageInfo> listFriendMessage(int senderId, int receiverId) {
+    public List<friendMessageInfo> listFriendMessage(int senderId, int receiverId) throws UnsupportedEncodingException {
         List<Friendmessage> messageList = friendmessageRepository.findBySenderIdAndReceiverId(senderId, receiverId);
         messageList.addAll(friendmessageRepository.findBySenderIdAndReceiverId(receiverId, senderId));
         if(messageList.isEmpty())

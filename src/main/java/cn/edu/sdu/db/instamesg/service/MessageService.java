@@ -4,10 +4,11 @@ import cn.edu.sdu.db.instamesg.api.friendMessageInfo;
 import cn.edu.sdu.db.instamesg.pojo.Friendmessage;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 public interface MessageService {
-    public List<friendMessageInfo> listFriendMessage(int senderId, int receiverId);
+    public List<friendMessageInfo> listFriendMessage(int senderId, int receiverId) throws UnsupportedEncodingException;
 
     public Boolean sendToFriendMessage(int senderId, int receiverId, String text);
 
