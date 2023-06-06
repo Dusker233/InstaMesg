@@ -3,9 +3,11 @@ package cn.edu.sdu.db.instamesg.service;
 import cn.edu.sdu.db.instamesg.api.UserInfo;
 import cn.edu.sdu.db.instamesg.api.friendMessageInfo;
 import cn.edu.sdu.db.instamesg.dao.FriendmessageRepository;
+import cn.edu.sdu.db.instamesg.dao.GroupmessageRepository;
 import cn.edu.sdu.db.instamesg.dao.MessageRepository;
 import cn.edu.sdu.db.instamesg.dao.UserRepository;
 import cn.edu.sdu.db.instamesg.pojo.Friendmessage;
+import cn.edu.sdu.db.instamesg.pojo.Groupmessage;
 import cn.edu.sdu.db.instamesg.pojo.Message;
 import cn.edu.sdu.db.instamesg.pojo.User;
 import cn.edu.sdu.db.instamesg.tools.messageEncryptAndDecrypt;
@@ -29,6 +31,9 @@ public class MessageServiceImpl implements MessageService {
 
     @Autowired
     private FriendmessageRepository friendmessageRepository;
+
+    @Autowired
+    private GroupmessageRepository groupmessageRepository;
 
     @Override
     public Boolean sendToFriendMessage(int senderId, int receiverId, String text) {
@@ -84,4 +89,32 @@ public class MessageServiceImpl implements MessageService {
         });
         return friendMessageInfoList;
     }
+
+	@Override
+    public List<groupMessageInfo> listGroupMessage(int groupId) {
+        List<Groupmessage> messageList = groupmessageRepository.findByGroupId(groupId);
+        if(messageList == null || messageList.isEmpty())
+        	return null;
+        List<friendMessageInfo> friendMessageInfoList = new ArrayList<>();
+        for(Friendmessage message: messageList) {
+            Message message1 = messageRepository.findById(message.getId()).orElse(null);
+            if(message1 == null)
+                continue;
+            message1.setContent(messageEncryptAndDecrypt.decryptMessage(message1.getContent()));
+            message.setMessages(message1);
+            friendMessageInfo info = new friendMessageInfo();
+            info.setSender(new UserInfo(message.getSender()));
+            info.setReceiver(new UserInfo(message.getReceiver()));
+            info.setMessage(message.getMessages());
+            friendMessageInfoList.add(info);
+        }
+        friendMessageInfoList.sort(new Comparator<friendMessageInfo>() {
+            @Override
+            public int compare(friendMessageInfo o1, friendMessageInfo o2) {
+                return o1.getMessage().getSendTime().compareTo(o2.getMessage().getSendTime());
+            }
+        });
+        return friendMessageInfoList;
+    }	
+
 }

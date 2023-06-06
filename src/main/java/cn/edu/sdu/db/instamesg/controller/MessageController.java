@@ -51,6 +51,21 @@ public class MessageController {
         return new SimpleResponse(false, "You don't have the friend relationship with this user");
     }
 
+	@GetMapping("/listGroupMessage")
+    public synchronized ApiResponse(HttpSession session, @RequestParam String groupid) {
+        if(session.getAttribute("user") == null)
+        	return new SimpleResponse(false, "please log in first");
+        int groupId = Integer.parseInt(groupid);
+        int userId = (int) session.getAttribute("user");
+        if(groupuserRepository.findByUseridAndGroupId(userId, groupId) != null) {
+            List<groupMessageInfo> list = messageService.listGroupMessage(groupId);
+            if(list != null)
+            	return new SimpleResponse(true, "", list);
+            return new SimpleResponse(false, "No message");
+        }
+        return new SimpleResponse(false, "You are not in this group");
+    }
+
     @GetMapping("/encryptTest")
     public synchronized ApiResponse encryptTest(@RequestParam String text) throws UnsupportedEncodingException {
         return new DataResponse(true, "", messageEncryptAndDecrypt.encryptMessage(text));

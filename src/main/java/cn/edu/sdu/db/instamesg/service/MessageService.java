@@ -10,6 +10,8 @@ import java.util.List;
 public interface MessageService {
     public List<friendMessageInfo> listFriendMessage(int senderId, int receiverId) throws UnsupportedEncodingException;
 
+	public List<groupMessageInfo> listGroupMessage(int groupId);
+
     public Boolean sendToFriendMessage(int senderId, int receiverId, String text);
 
     public Boolean sendToFriendFile(int senderId, int receiverId, MultipartFile file);
