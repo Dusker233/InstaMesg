@@ -1,15 +1,12 @@
 package cn.edu.sdu.db.instamesg.controller;
 
-import cn.edu.sdu.db.instamesg.api.DataResponse;
-import cn.edu.sdu.db.instamesg.api.friendMessageInfo;
+import cn.edu.sdu.db.instamesg.api.*;
 import cn.edu.sdu.db.instamesg.pojo.Friendmessage;
 import cn.edu.sdu.db.instamesg.tools.messageEncryptAndDecrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import cn.edu.sdu.db.instamesg.api.ApiResponse;
-import cn.edu.sdu.db.instamesg.api.SimpleResponse;
 import cn.edu.sdu.db.instamesg.dao.FriendRepository;
 import cn.edu.sdu.db.instamesg.dao.GroupuserRepository;
 import cn.edu.sdu.db.instamesg.dao.UserRepository;
@@ -52,7 +49,7 @@ public class MessageController {
     }
 
 	@GetMapping("/listGroupMessage")
-    public synchronized ApiResponse(HttpSession session, @RequestParam String groupid) {
+    public synchronized ApiResponse listGroupMessage(HttpSession session, @RequestParam String groupid) {
         if(session.getAttribute("user") == null)
         	return new SimpleResponse(false, "please log in first");
         int groupId = Integer.parseInt(groupid);
@@ -60,7 +57,7 @@ public class MessageController {
         if(groupuserRepository.findByUseridAndGroupId(userId, groupId) != null) {
             List<groupMessageInfo> list = messageService.listGroupMessage(groupId);
             if(list != null)
-            	return new SimpleResponse(true, "", list);
+            	return new DataResponse(true, "", list);
             return new SimpleResponse(false, "No message");
         }
         return new SimpleResponse(false, "You are not in this group");

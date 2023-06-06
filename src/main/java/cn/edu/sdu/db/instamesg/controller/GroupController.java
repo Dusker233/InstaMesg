@@ -33,6 +33,33 @@ public class GroupController {
     @Autowired
     private WaitGroupRepository waitGroupRepository;
 
+    @GetMapping("/list")
+    public synchronized ApiResponse listGroup(HttpSession session) {
+        if(session.getAttribute("user") == null)
+            return new SimpleResponse(false, "please log in first");
+        int userId = (int) session.getAttribute("user");
+        List<Groupuser> list = groupuserRepository.findByUserId(userId);
+        List<Group> groups = new ArrayList<>();
+        for(Groupuser groupuser : list) {
+            groups.add(groupRepository.findGroupById(groupuser.getId().getGroupId()));
+        }
+        return new DataResponse(true, "", groups);
+    }
+
+    @GetMapping("/getGroup")
+    public synchronized ApiResponse findGroup(HttpSession session, @RequestParam String name) {
+        if(session.getAttribute("user") == null)
+            return new SimpleResponse(false, "please log in first");
+        Group group = null;
+        if(!name.matches("[0-9]+"))
+            group = groupRepository.findById(Integer.valueOf(name.trim())).orElse(null);
+        else
+            group = groupRepository.findGroupByGroupName(name);
+        if(group == null)
+            return new SimpleResponse(false, "Group not found");
+        return new DataResponse(true, "", group);
+    }
+
     @PostMapping("/addGroup")
     public synchronized ApiResponse addGroup(HttpSession session, @RequestParam(required = false) String groupid,
                                              @RequestParam(required = false) String groupname, @RequestParam(required = false) String reason) {

@@ -23,16 +23,7 @@ public class WebSocketServer {
     @OnOpen
     public void onOpen(Session session, @PathParam("userid") String userid) {
         sessionMap.put(userid, session);
-        System.out.println("new connection: " + userid);
-        JSONObject result = new JSONObject();
-        JSONArray array = new JSONArray();
-        result.set("users", array);
-        for(Object key: sessionMap.keySet()) {
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.set("userid", key);
-            array.add(jsonObject);
-        }
-        sendAllMessage(JSONUtil.toJsonStr(result));
+        this.heartbeat(userid, "heartbeat");
     }
 
     @OnClose
@@ -48,16 +39,7 @@ public class WebSocketServer {
         String text = object.getStr("text"); // 消息文本
         String code = object.getStr("code"); // 消息类型
         if(code.equals("heartbeat")) {
-            System.out.println("heartbeat: " + userid + " " + text);
-            JSONObject result = new JSONObject();
-            JSONArray array = new JSONArray();
-            result.set("users", array);
-            for(Object key: sessionMap.keySet()) {
-                JSONObject jsonObject = new JSONObject();
-                jsonObject.set("userid", key);
-                array.add(jsonObject);
-            }
-            sendAllMessage(JSONUtil.toJsonStr(result));
+            this.heartbeat(userid, text);
             return;
         }
         Session toSession = sessionMap.get(to);
@@ -94,5 +76,18 @@ public class WebSocketServer {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void heartbeat(String userid, String text) {
+        System.out.println("heartbeat: " + userid + " " + text);
+        JSONObject result = new JSONObject();
+        JSONArray array = new JSONArray();
+        result.set("users", array);
+        for(Object key: sessionMap.keySet()) {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.set("userid", key);
+            array.add(jsonObject);
+        }
+        sendAllMessage(JSONUtil.toJsonStr(result));
     }
 }

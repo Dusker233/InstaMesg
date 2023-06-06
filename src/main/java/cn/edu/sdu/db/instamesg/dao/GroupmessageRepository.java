@@ -1,6 +1,7 @@
 package cn.edu.sdu.db.instamesg.dao;
 
 import cn.edu.sdu.db.instamesg.pojo.Friendmessage;
+import cn.edu.sdu.db.instamesg.pojo.Groupmessage;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 

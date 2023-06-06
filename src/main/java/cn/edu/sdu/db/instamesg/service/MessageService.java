@@ -1,6 +1,7 @@
 package cn.edu.sdu.db.instamesg.service;
 
 import cn.edu.sdu.db.instamesg.api.friendMessageInfo;
+import cn.edu.sdu.db.instamesg.api.groupMessageInfo;
 import cn.edu.sdu.db.instamesg.pojo.Friendmessage;
 import org.springframework.web.multipart.MultipartFile;
 
